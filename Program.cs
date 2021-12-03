@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
+
 namespace AdventOfCode2021
 {
 	class Program
@@ -54,10 +56,10 @@ namespace AdventOfCode2021
 						Day2PuzzleB(input);
 						break;
 					case "3a":
-
+						Day3PuzzleA(input);
 						break;
 					case "3b":
-
+						Day3PuzzleB(input);
 						break;
 					case "4a":
 
@@ -198,7 +200,7 @@ namespace AdventOfCode2021
 						break;
 					default:
 						//Clear the screen and display an error
-						Console.Clear();
+						
 						Console.WriteLine("Error, wrong input");
 						break;
 				}
@@ -377,7 +379,95 @@ namespace AdventOfCode2021
 			Console.WriteLine(result);
 			Console.ReadKey();
 		}
+		private static void Day3PuzzleA(string namefile)
+        {
+			string[] linesRead = ReturnTextLines(namefile);
+			
+			int[] arrayTotal12Column = new int[12];
+			int sizeOfFileDivideBy2 = linesRead.GetLength(0) / 2;
+			string gammaBinary;
+			string epsilonBinary;
+			int gamma = 0;
+			int epsilon = 0;
+			int result = 0;
+			//Get an array of the number of 1 by index (11 = right, 0 = left)
+			arrayTotal12Column = SplitStringAndAddValue(linesRead);
+			gammaBinary = CalculateGamma(arrayTotal12Column, sizeOfFileDivideBy2);
+			epsilonBinary = CalculateEpsilon(gammaBinary);
+			gamma = Convert.ToInt32(gammaBinary, 2);
+			epsilon = Convert.ToInt32(epsilonBinary, 2);
+			result = epsilon * gamma;
+			Console.WriteLine(result);
+		}
 
+		private static void Day3PuzzleB(string namefile)
+        {
+			string[] linesRead = ReturnTextLines(namefile);
+			List<string> newList = new List<string>();
+			List<string> ListWith0 = new List<string>();
+			List<string> ListWith1 = new List<string>();
+			char[] fileListChar;
+			string gammaBinary;
+			string epsilonBinary;
+			int gamma = 0;
+			int epsilon = 0;
+			int result = 0;
+			int maxLength = 0;
+			bool gammaDone = false;
+			bool epsilonDone = false;
+			do
+			{
+				newList.Clear();
+				newList = linesRead.ToList();
+				maxLength = newList[0].Length;
+				for (int i = 0; i < maxLength; i++)
+				{
+					foreach (string fileList in newList)
+					{
+						fileListChar = fileList.ToCharArray();
+						if (fileListChar[i] == '1')
+						{
+							ListWith1.Add(fileList);
+						}
+						else
+						{
+							ListWith0.Add(fileList);
+						}
+					}
+					if (ListWith1.Count() >= ListWith0.Count())
+					{
+						newList.Clear();
+						newList = gammaDone ? ListWith0.ToList() : ListWith1.ToList();
+					}
+					else
+					{
+						newList.Clear();
+						newList = gammaDone ? ListWith1.ToList() : ListWith0.ToList();
+					}
+					ListWith1.Clear();
+					ListWith0.Clear();
+					if (newList.Count() == 1)
+					{
+						i = maxLength + 1;
+					}
+					//Console.WriteLine("Size : " + newList.Count().ToString());
+				}
+				if (!gammaDone)
+				{
+					gammaBinary = newList[0].ToString();
+					gamma = Convert.ToInt32(gammaBinary, 2);
+					gammaDone = true;
+				}
+				else
+				{
+					epsilonBinary = newList[0].ToString();
+					epsilon = Convert.ToInt32(epsilonBinary, 2);
+					epsilonDone = true;
+				}
+			} while (!gammaDone || !epsilonDone);
+			result = epsilon * gamma;
+			Console.WriteLine(result);
+		}
 		// This method read the file name.txt at the place where the .exe is executed and returns all the lines value
 		private static string[] ReturnTextLines(string name)
 		{
@@ -393,5 +483,51 @@ namespace AdventOfCode2021
 			else
 				return false;
 		}
+
+		private static int[] SplitStringAndAddValue(string[] lines)
+        {
+			char[] array12Column;
+			int num = 0;
+			int[] arrayTotal = new int[12];
+			foreach (string line in lines)
+			{
+				array12Column = line.ToCharArray();
+
+				for (int i = 0; i < array12Column.GetLength(0); i++)
+				{
+					int.TryParse(array12Column[i].ToString(), out num);
+					arrayTotal[i] += num;
+				}
+			}
+			return arrayTotal;
+		}
+
+		private static string CalculateGamma(int[] values, int sizeOfFileDivideBy2)
+        {
+			string gamma;
+			int[] indexGamma = new int[12];
+
+			for(int i = 0; i < values.GetLength(0); i++)
+            {
+
+				indexGamma[i] = values[i] > sizeOfFileDivideBy2 ? 1 : 0;
+            }
+
+			gamma = string.Join("", indexGamma);
+
+			return gamma;
+        }
+		private static string CalculateEpsilon(string gamma)
+        {
+			string epsilon;
+			char[] gammaChar = gamma.ToCharArray();
+			char[] epsilonChar = new char[gammaChar.GetLength(0)];
+			for(int i = 0; i < gammaChar.GetLength(0); i++)
+            {
+				epsilonChar[i] = gammaChar[i] == '1' ? '0' : '1';
+            }
+			epsilon = string.Join("", epsilonChar);
+			return epsilon;
+        }
 	}
 }
